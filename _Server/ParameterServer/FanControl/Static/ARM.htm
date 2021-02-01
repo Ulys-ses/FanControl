@@ -66,7 +66,7 @@
       Code:&nbsp;<input v-model="strCode"> Value:&nbsp;<input v-model="strValue">
       <button @click="AddProbe()">Добавить</button><br /> 
       Фильтр:: Код:&nbsp;<input v-model="strFilterCode"> Начало:&nbsp;<input v-model="timeFilterBegin"> Конец:&nbsp;<input v-model="timeFilterEnd">
-      <button @click="LoadList()">Загрузить</button><br /> 
+      <button @click="LoadList()">Загрузить</button><button @click="Delete()">Удалить</button><br /> 
       <table border=0>
         <tr v-for="ProbeData in listProbe">
           <td>{{ProbeData.Code}}</td>
@@ -101,6 +101,11 @@
         AddProbe: function() {
           Data = {"Code":this.strCode, "Value": this.strValue}
           axios.post('FanControl/Probes/', Data)
+          .then(function(response){FanControlApp.ProbListObject.LoadList();})
+          .catch(function (error) {alert(error);});
+        },
+        Delete: function() {
+          axios.delete('FanControl/Probes/'+this.strFilterCode+"/"+this.timeFilterEnd+"/")
           .then(function(response){FanControlApp.ProbListObject.LoadList();})
           .catch(function (error) {alert(error);});
         },

@@ -26,7 +26,7 @@ class FanControl:
 
 		flaskApplication.add_url_rule(self.strRootURL + '/Probes/<strCode>/<timeBegin>/<timeEnd>/', 'fcProbes_Get',    self.Probes_Get,    methods=['GET'])
 		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbe_Add',     self.Probe_Add,     methods=['POST'])
-		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbes_Delete', self.Probes_Delete, methods=['DELETE'])
+		flaskApplication.add_url_rule(self.strRootURL + '/Probes/<strCode>/<timeEnd>/', 'fcProbes_Delete', self.Probes_Delete, methods=['DELETE'])
 
 	def GetARMPage(self):
 		return self.GetStaticFile("ARM.htm")
@@ -162,5 +162,11 @@ class FanControl:
 		SQLiteConnect.commit()
 		return "OK"
 
-	def Probes_Delete(self):
-		return "Hello, ProbesDelete!"
+	def Probes_Delete(self, strCode, timeEnd):
+		# Открываем базу
+		SQLiteConnect = sqlite3.connect(self.strDataBase)
+		cursFanControl = SQLiteConnect.cursor()
+        # Удаляем
+		cursFanControl.execute('delete from ProbeValues where Time <= ? and Code like ?', (timeEnd, strCode))
+		SQLiteConnect.commit()
+		return "OK"
