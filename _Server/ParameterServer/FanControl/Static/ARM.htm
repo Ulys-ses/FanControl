@@ -8,7 +8,8 @@
 <body>
   <h1>Вентиляторы</h1>
   <div id="FanControlApp">
-    <param-editor />
+    <param-editor></param-editor>
+    <probe-list></probe-list>
   </div>
 
   <!-- Модальное диалоговое окно -->
@@ -56,6 +57,58 @@
         itemInput.focus();
       }
     });
+  </script>
+
+  <!-- Список показаний датчиков -->
+  <script type="text/x-template" id="probe-list-template">
+    <span>
+      <h2>Показания датчиков</h2>
+      Code:&nbsp;<input v-model="strCode"> Value:&nbsp;<input v-model="strValue">
+      <button @click="AddProbe()">Добавить</button><br /> 
+      Фильтр:: Код:&nbsp;<input v-model="strFilterCode"> Начало:&nbsp;<input v-model="timeFilterBegin"> Конец:&nbsp;<input v-model="timeFilterEnd">
+      <button @click="LoadList()">Загрузить</button><br /> 
+      <table border=0>
+        <tr v-for="ProbeData in listProbe">
+          <td>{{ProbeData.Code}}</td>
+          <td>{{ProbeData.Date}}</td>
+          <td>{{ProbeData.Value}}</td>
+        </tr>
+      </table>
+    </span>
+  </script>
+
+  <script>
+    Vue.component('probe-list', {
+      name:'probe_list',
+      template: "#probe-list-template",
+      data: function () {
+        return {
+          listProbe: null,          // Здесь храним список показаний датчиков
+          strCode: "",
+          strValue: "",
+          timeFilterBegin:"0",
+          timeFilterEnd:"9",
+          strFilterCode:"%",
+        }
+      },
+      methods: {
+        // Читаем список наборов
+        LoadList: function() {
+          axios.get('FanControl/Probes/'+this.strFilterCode+"/"+this.timeFilterBegin+"/"+this.timeFilterEnd+"/")
+          .then(function(response){FanControlApp.ProbListObject.listProbe = response.data;})
+          .catch(function (error) {alert(error);});
+        },
+        AddProbe: function() {
+          Data = {"Code":this.strCode, "Value": this.strValue}
+          axios.post('FanControl/Probes/', Data)
+          .then(function(response){FanControlApp.ProbListObject.LoadList();})
+          .catch(function (error) {alert(error);});
+        },
+      },
+    created: function () {
+      this.$root.ProbListObject = this;
+      },
+    })
   </script>
 
   <!-- Список наборов параметров -->
@@ -193,6 +246,8 @@
 
           ParamSetListObject: null,
           ShowParamSetListObject: false,
+
+          ProbListObject: null,
         }
       },
       template: "#param-editor-template",

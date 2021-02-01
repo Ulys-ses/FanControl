@@ -24,8 +24,8 @@ class FanControl:
 		flaskApplication.add_url_rule(self.strRootURL + '/Parameters/<strUpdateTime>/Comment', 'fcParameterSetComment_Get',  self.ParameterSetComment_Get,     methods=['GET'])
 		flaskApplication.add_url_rule(self.strRootURL + '/Parameters/<strUpdateTime>/Comment', 'fcParameterSetComment_Set',  self.ParameterSetComment_Set,     methods=['PUT'])
 
-		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbes_Get',    self.Probes_Get,    methods=['GET'])
-		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbe_Set',     self.Probe_Set,     methods=['POST'])
+		flaskApplication.add_url_rule(self.strRootURL + '/Probes/<strCode>/<timeBegin>/<timeEnd>/', 'fcProbes_Get',    self.Probes_Get,    methods=['GET'])
+		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbe_Add',     self.Probe_Add,     methods=['POST'])
 		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbes_Delete', self.Probes_Delete, methods=['DELETE'])
 
 	def GetARMPage(self):
@@ -56,7 +56,7 @@ class FanControl:
 		SQLiteConnect = sqlite3.connect(self.strDataBase)
 		cursFanControl = SQLiteConnect.cursor()
         # Сохраниям
-		cursFanControl.execute('insert into Params values (?, ?, "")', (Now, Parameters))
+		cursFanControl.execute('insert into Params (Time, Parameters, Comment) values (?, ?, "")', (Now, Parameters))
 		SQLiteConnect.commit()
 		return "OK"
 
@@ -87,7 +87,7 @@ class FanControl:
 		if strUpdateTime == FanControl.strCurrentTimeName:
 			cursFanControl.execute('update Params set Time=?, Parameters = ? where Time in (select max(Time) from Params)', (Now, Parameters))
 			if cursFanControl.rowcount < 1:
-				cursFanControl.execute('insert into Params values (?, ?, "")', (Now, Parameters))
+				cursFanControl.execute('insert into Params (Time, Parameters, Comment) values (?, ?, "")', (Now, Parameters))
 		else:
 			cursFanControl.execute('update Params set Time=?, Parameters = ? where Time = ?', (Now, Parameters, strUpdateTime))
 		SQLiteConnect.commit()
@@ -134,11 +134,33 @@ class FanControl:
 		SQLiteConnect.commit()
 		return "OK"
 
-	def Probes_Get(self):
-		return "Hello, Probes!"
+	def Probes_Get(self, strCode, timeBegin, timeEnd):
+		# Открываем базу
+		SQLiteConnect = sqlite3.connect(self.strDataBase)
+		SQLiteConnect.row_factory = sqlite3.Row
+		cursFanControl = SQLiteConnect.cursor()
+		# Читаем список из базы
+		cursFanControl.execute('select Time, Code, Value from  ProbeValues where Time >= ? and Time <= ? and Code like ? order by Time desc', (timeBegin, timeEnd, strCode))
+		# Формируем json
+		listResult = []
+		for rowProbeInfo in cursFanControl:
+			ParamSetInfo = {"Date": rowProbeInfo["Time"], "Code":rowProbeInfo["Code"], "Value":rowProbeInfo["Value"]}
+			listResult.append(ParamSetInfo)
+		return json.dumps(listResult, ensure_ascii=False, indent=1)
 
-	def Probe_Set(self):
-		return "Hello, ProbeSet!"
+	def Probe_Add(self):
+		# Читаем параметры
+		strCode   = request.json["Code"]
+		strValue  = request.json["Value"]
+
+		Now = datetime.datetime.today().strftime("%Y%m%d-%H%M%S")
+		# Открываем базу
+		SQLiteConnect = sqlite3.connect(self.strDataBase)
+		cursFanControl = SQLiteConnect.cursor()
+        # Сохраниям
+		cursFanControl.execute('insert into ProbeValues (Code, Time, Value) values (?, ?, ?)', (strCode, Now, strValue))
+		SQLiteConnect.commit()
+		return "OK"
 
 	def Probes_Delete(self):
 		return "Hello, ProbesDelete!"
