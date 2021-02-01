@@ -13,3 +13,6 @@ pip3 install Flask
 Добавить '/home/ubuntu/.local/bin' в /etc/environment
 
 timedatectl set-timezone Europe/Moscow
+
+sudo apt-get install supervisor
+sudo mv /home/ubuntu/FanControl.conf  /etc/supervisor/conf.d/
