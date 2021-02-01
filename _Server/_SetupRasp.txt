@@ -1,0 +1,15 @@
+#Описание подготовки сервера
+
+Ставим ubuntu server через Raspberry Pi Imager.
+Вход по ssh: ubuntu@ubuntu.
+Меняем пароль.
+
+sudo apt-get update
+sudo apt install mc
+sudo apt install pythonpy
+sudo apt install python3-pip
+
+pip3 install Flask
+Добавить '/home/ubuntu/.local/bin' в /etc/environment
+
+timedatectl set-timezone Europe/Moscow
