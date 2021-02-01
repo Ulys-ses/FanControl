@@ -1,0 +1,288 @@
+<html>
+<head>
+  <title>Вентиляторы</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="FanControl/modal.css" />
+</head>
+<body>
+  <h1>Вентиляторы</h1>
+  <div id="FanControlApp">
+    <param-editor />
+  </div>
+
+  <!-- Модальное диалоговое окно -->
+  <script type="text/x-template" id="modal-template">
+    <transition name="modal">
+      <div class="modal-mask" v-on:keyup.esc="$emit('close')">
+        <div class="modal-wrapper">
+          <div class="modal-container">
+
+            <div class="modal-header">
+              <slot name="header">
+                default header
+              </slot>
+            </div>
+
+            <div class="modal-body">
+              <slot name="body">
+                default body
+              </slot>
+            </div>
+
+            <div class="modal-footer">
+              <button class="modal-default-button" @click="$emit('close')">
+                Cancel
+              </button>
+              <slot name="footer">
+                default footer
+              </slot>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </script>
+
+  <script>
+    // register modal component
+    Vue.component("modal", {
+      props:          // -- Параметры
+      ['focus_id'     // Элемент для фокусировки
+      ],
+      template: "#modal-template",
+    mounted: function () {
+        itemInput = document.getElementById(this.focus_id);
+        itemInput.focus();
+      }
+    });
+  </script>
+
+  <!-- Список наборов параметров -->
+  <script type="text/x-template" id="param-list-template">
+    <span>
+      <h2>Наборы параметров</h2>
+      <table border=0>
+        <tr v-for="ParamSet in listParamSet" id = 'ParamSet.Date' v-on:click='SelectSet(ParamSet.Date)' v-on:dblclick='EditSet(ParamSet.Date)' v-bind:style="{'color': ColorName(ParamSet.Date)}">
+          <td>{{ParamSet.Date}}</td>
+          <td>{{ParamSet.Comment}}</td>
+        </tr>
+      </table>
+      <!-- Диалог редактирования комментария -->
+      <modal
+      v-if="showCommentEdit" 
+      @close="showCommentEdit = false"
+      v-bind:focus_id="CurrFocusId"
+      >
+        <span slot="header">
+          Комментарий к набору {{$parent.ParamSetId}}
+        </span>
+        <span slot="body">
+          <textarea v-model="Comment" placeholder="Комментария пока нет"></textarea>
+        </span>
+        <span slot="footer">
+          <button class="modal-default-button" @click="SaveComment()">Сохранить</button>
+          <button class="modal-default-button" @click="DeleteSet()">Удалить</button><br/>
+        </span>
+      </modal>
+    </span>
+  </script>
+
+  <script>
+    Vue.component('param-list', {
+      name:'data_list',
+      template: "#param-list-template",
+      data: function () {
+        return {
+          listParamSet: null,          // Здесь храним список наборов параметров
+          showCommentEdit: false,
+          Comment: "",
+        }
+      },
+      methods: {
+        // Читаем список наборов
+        LoadList: function() {
+          axios.get('FanControl/Parameters/')
+          .then(function(response){FanControlApp.ParameterEditorObject.ParamSetListObject.listParamSet = response.data;})
+          .catch(function (error) {alert(error);});
+        },
+        SelectSet: function(ParamSetId) {
+          this.$parent.LoadParameters(ParamSetId);
+        },
+        EditSet: function(ParamSetId) {
+          this.showCommentEdit = true;
+          axios.get('FanControl/Parameters/' + this.$parent.ParamSetId + '/Comment')
+          .then(function(response){FanControlApp.ParameterEditorObject.ParamSetListObject.Comment = response.data.Comment;})
+          .catch(function (error) {alert(error);});
+        },
+        SaveComment: function() {
+          jsonComment = {"Comment": this.Comment}
+          axios.put('FanControl/Parameters/' + this.$parent.ParamSetId + '/Comment', jsonComment)
+          .catch(function (error) {alert(error);});
+          this.showCommentEdit = false;
+          this.LoadList();
+        },
+        DeleteSet: function() {
+          this.showCommentEdit = !this.showCommentEdit;
+          axios.delete('FanControl/Parameters/' + this.$parent.ParamSetId + "/")
+          .catch(function (error) {alert(error);});
+          this.showCommentEdit = false;
+          this.LoadList();
+        },
+        // Формирование цвета строки
+        ColorName: function (ParamSetId) {
+          if (ParamSetId == this.$parent.ParamSetId)
+            return "red";
+          return "";
+        },
+      },
+    created: function () {
+      this.$parent.ParamSetListObject = this;
+      },
+    })
+  </script>
+
+  <!-- Редактор параметров -->
+  <script type="text/x-template" id="param-editor-template">
+    <span>
+    <h2>Параметры (набор "{{ParamSetId}}")</h2>
+    Период запроса параметров (сек): <br/>&nbsp;&nbsp;<input v-model.number="TimeGetParams"> <br/>
+    Период сохранения показаний датчиков (сек): <br/>&nbsp;&nbsp;<input v-model.number="TimeSaveProbValues">  <br/>
+    <br/>
+
+    <h3>Туалет</h3>
+    Время проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeWorkHard"> <br/>
+    Время горения лампы для включения проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeShine"> <br/>
+    Уровень освещенности в туалете: <br/>&nbsp;&nbsp;<input v-model.number="RestShineLevel"> <br/>
+    Частота вращения вентилятора:<br/>
+    &nbsp;&nbsp;постоянная: <input v-model.number="RestLowFreq"> &nbsp;&nbsp;интенсивная: <input v-model.number="RestHighFreq"><br/>
+    <br/>
+
+    <h3>Ванная</h3>
+    Пороговое значение влажности для включения/выключения вентилятора:<br/>
+    &nbsp;&nbsp;выключение: <input v-model.number="BathHudimOff"> &nbsp;&nbsp;включение: <input v-model.number="BathHudimOn"><br/>
+    Частота вращения вентилятора:<br/>
+    &nbsp;&nbsp;постоянная: <input v-model.number="BathLowFreq"> &nbsp;&nbsp;интенсивная: <input v-model.number="BathHighFreq"><br/>
+    <br/>
+
+    <button id="SaveParams" @click="SaveParameters()">Сохранить</button>
+    <button id="BackupParameters" @click="BackupParameters()">Скопировать</button>
+    <button id="RestoreParameters" @click="RestoreParameters()">Восстановить</button>
+
+    <param-list v-show="ShowParamSetListObject"/>
+    </span>
+  </script>
+
+  <script>
+    Vue.component("param-editor", {
+      data: function () {
+        return {
+          ParamSetId: '',
+
+          TimeGetParams: 5,       // - промежуток времени между запросами параметров
+          TimeSaveProbValues: 60, // - промежуток времени между сохранениями показаний датчиков
+          RestTimeWorkHard: 300,  // - время проветривания туалета
+          RestTimeShine: 300,     // - время горения лампы для включения проветривания
+          RestShineLevel: 10,     // - уровень освещенности в туалете
+          RestLowFreq: 20,        // - частота постоянного режима в туалете
+          RestHighFreq: 100,      // - частота интенсивного режима в туалете
+          BathLowFreq: 20,        // - частота постоянного режима в ванной
+          BathHighFreq: 100,      // - частота интенсивного режима в ванной
+          BathHudimOn: 60,        // - пороговое значение влажности для включения проветривания в ванной
+          BathHudimOff: 40,       // - пороговое значение влажности для вЫключения проветривания в ванной
+
+          ParamSetListObject: null,
+          ShowParamSetListObject: false,
+        }
+      },
+      template: "#param-editor-template",
+    methods: 
+    {
+      // Разбор параметров
+      ParseParameters: function(Parameters) 
+      {
+        for (index = 0; index < Parameters.length; ++index)
+        {
+          if (Parameters[index].Name == "TimeGetParams")
+            this.TimeGetParams = Parameters[index].Value;
+          else if (Parameters[index].Name == "TimeSaveProbValues")
+            this.TimeSaveProbValues = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestTimeWorkHard")
+            this.RestTimeWorkHard = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestTimeShine")
+            this.RestTimeShine = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestShineLevel")
+            this.RestShineLevel = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestLowFreq")
+            this.RestLowFreq = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestHighFreq")
+            this.RestHighFreq = Parameters[index].Value;
+          else if (Parameters[index].Name == "BathLowFreq")
+            this.BathLowFreq = Parameters[index].Value;
+          else if (Parameters[index].Name == "BathHighFreq")
+            this.BathHighFreq = Parameters[index].Value;
+          else if (Parameters[index].Name == "BathHudimOn")
+            this.BathHudimOn = Parameters[index].Value;
+          else if (Parameters[index].Name == "BathHudimOff")
+            this.BathHudimOff = Parameters[index].Value;
+        }
+      },
+      SerialParameters: function ()
+      {
+        return [
+           {"Name":"TimeGetParams",      "Value": this.TimeGetParams},
+           {"Name":"TimeSaveProbValues", "Value": this.TimeSaveProbValues},
+           {"Name":"RestTimeWorkHard",   "Value": this.RestTimeWorkHard},
+           {"Name":"RestTimeShine",      "Value": this.RestTimeShine},
+           {"Name":"RestShineLevel",     "Value": this.RestShineLevel},
+           {"Name":"RestLowFreq",        "Value": this.RestLowFreq},
+           {"Name":"RestHighFreq",       "Value": this.RestHighFreq},
+           {"Name":"BathLowFreq",        "Value": this.BathLowFreq},
+           {"Name":"BathHighFreq",       "Value": this.BathHighFreq},
+           {"Name":"BathHudimOn",        "Value": this.BathHudimOn},
+           {"Name":"BathHudimOff",       "Value": this.BathHudimOff},
+               ];
+      },
+        // Чтение параметров
+        LoadParameters: function(ParamSetId) {
+            this.ParamSetId = ParamSetId;
+            axios.get('FanControl/Parameters/' + this.ParamSetId)
+            .then(function(response){FanControlApp.ParameterEditorObject.ParseParameters(response.data);})
+            .catch(function (error) {alert(error);});
+        },
+      SaveParameters: function() {
+          axios.put('FanControl/Parameters/' + this.ParamSetId + '/', this.SerialParameters())
+          .catch(function (error) {alert(error);});
+      },
+      BackupParameters: function() {
+          axios.post('FanControl/Parameters/', this.SerialParameters())
+          .catch(function (error) {alert(error);});
+      },
+      RestoreParameters: function() {
+          this.ShowParamSetListObject = !this.ShowParamSetListObject;
+          this.ParamSetListObject.LoadList();
+      },
+    },
+//    mounted: function () {
+//      },
+    created: function () {
+      this.$root.ParameterEditorObject = this;
+      },
+    });
+  </script>
+
+  <script>
+    var FanControlApp = new Vue({
+      el: '#FanControlApp',
+      data: {
+        ParameterEditorObject: null,
+      },
+//      methods: {
+//      },
+      mounted: function () {
+        this.ParameterEditorObject.LoadParameters('Current');
+        }
+   })
+  </script>
+</body>
+</html>
