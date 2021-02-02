@@ -8,8 +8,10 @@
 <body>
   <h1>Вентиляторы</h1>
   <div id="FanControlApp">
-    <param-editor></param-editor>
-    <probe-list></probe-list>
+    <button v-show="!bShowParameters" @click="bShowParameters = true">Параметры</button>
+    <button v-show="bShowParameters" @click="bShowParameters = false">Датчики</button>
+    <param-editor v-show="bShowParameters"></param-editor>
+    <probe-list   v-show="!bShowParameters"></probe-list>
   </div>
 
   <!-- Модальное диалоговое окно -->
@@ -63,17 +65,19 @@
   <script type="text/x-template" id="probe-list-template">
     <span>
       <h2>Показания датчиков</h2>
-      Code:&nbsp;<input v-model="strCode"> Value:&nbsp;<input v-model="strValue">
-      <button @click="AddProbe()">Добавить</button><br /> 
-      Фильтр:: Код:&nbsp;<input v-model="strFilterCode"> Начало:&nbsp;<input v-model="timeFilterBegin"> Конец:&nbsp;<input v-model="timeFilterEnd">
-      <button @click="LoadList()">Загрузить</button><button @click="Delete()">Удалить</button><br /> 
+      Фильтр:<br/> Код:&nbsp;<input v-model="strFilterCode" size=4> Начало:&nbsp;<input v-model="timeFilterBegin"> Конец:&nbsp;<input v-model="timeFilterEnd">
+      <button @click="LoadList()">Загрузить</button><br/>
+      Удаление:<br/> Код:&nbsp;<input v-model="strDeleteCode" size=4> Конец:&nbsp;<input v-model="timeDeleteEnd">
+      <button @click="Delete()">Удалить</button><br /> 
       <table border=0>
-        <tr v-for="ProbeData in listProbe">
+        <tr v-for="ProbeData in listProbe" v-on:dblclick='LoadToDelete(ProbeData.Code, ProbeData.Date)' >
           <td>{{ProbeData.Code}}</td>
           <td>{{ProbeData.Date}}</td>
           <td>{{ProbeData.Value}}</td>
         </tr>
       </table>
+      Code:&nbsp;<input v-model="strCode"> Value:&nbsp;<input v-model="strValue">
+      <button @click="AddProbe()">Добавить</button><br /> 
     </span>
   </script>
 
@@ -84,11 +88,13 @@
       data: function () {
         return {
           listProbe: null,          // Здесь храним список показаний датчиков
-          strCode: "",
+          strCode: "",              // Параметры для добавления
           strValue: "",
-          timeFilterBegin:"0",
+          timeFilterBegin:"0",      // Параметры для фильтрации
           timeFilterEnd:"9",
           strFilterCode:"%",
+          timeDeleteEnd:"",         // Параметры для удаления
+          strDeleteCode:"%",
         }
       },
       methods: {
@@ -105,9 +111,13 @@
           .catch(function (error) {alert(error);});
         },
         Delete: function() {
-          axios.delete('FanControl/Probes/'+this.strFilterCode+"/"+this.timeFilterEnd+"/")
+          axios.delete('FanControl/Probes/'+this.strDeleteCode+"/"+this.timeDeleteEnd+"/")
           .then(function(response){FanControlApp.ProbListObject.LoadList();})
           .catch(function (error) {alert(error);});
+        },
+        LoadToDelete: function(Code, Date) {
+          this.strDeleteCode = Code; 
+          this.timeDeleteEnd = Date
         },
       },
     created: function () {
@@ -121,7 +131,7 @@
     <span>
       <h2>Наборы параметров</h2>
       <table border=0>
-        <tr v-for="ParamSet in listParamSet" id = 'ParamSet.Date' v-on:click='SelectSet(ParamSet.Date)' v-on:dblclick='EditSet(ParamSet.Date)' v-bind:style="{'color': ColorName(ParamSet.Date)}">
+        <tr v-for="(ParamSet, index) in listParamSet" id = 'ParamSet.Date' v-on:click='SelectSet(ParamSet.Date)' v-on:dblclick='EditSet(ParamSet.Date)' v-bind:style="{'color': ColorName(ParamSet.Date, index)}">
           <td>{{ParamSet.Date}}</td>
           <td>{{ParamSet.Comment}}</td>
         </tr>
@@ -164,15 +174,18 @@
           .then(function(response){FanControlApp.ParameterEditorObject.ParamSetListObject.listParamSet = response.data;})
           .catch(function (error) {alert(error);});
         },
+        // Выбор набора для отображения/редактирования
         SelectSet: function(ParamSetId) {
           this.$parent.LoadParameters(ParamSetId);
         },
+        // Редактирование комментария
         EditSet: function(ParamSetId) {
           this.showCommentEdit = true;
           axios.get('FanControl/Parameters/' + this.$parent.ParamSetId + '/Comment')
           .then(function(response){FanControlApp.ParameterEditorObject.ParamSetListObject.Comment = response.data.Comment;})
           .catch(function (error) {alert(error);});
         },
+        // Сохранение комментария
         SaveComment: function() {
           jsonComment = {"Comment": this.Comment}
           axios.put('FanControl/Parameters/' + this.$parent.ParamSetId + '/Comment', jsonComment)
@@ -180,6 +193,7 @@
           this.showCommentEdit = false;
           this.LoadList();
         },
+        // Удаление набора параметров
         DeleteSet: function() {
           this.showCommentEdit = !this.showCommentEdit;
           axios.delete('FanControl/Parameters/' + this.$parent.ParamSetId + "/")
@@ -188,8 +202,8 @@
           this.LoadList();
         },
         // Формирование цвета строки
-        ColorName: function (ParamSetId) {
-          if (ParamSetId == this.$parent.ParamSetId)
+        ColorName: function (ParamSetId, rowIndex) {
+          if (ParamSetId == this.$parent.ParamSetId || (this.$parent.ParamSetId == "Current" && rowIndex == 0))
             return "red";
           return "";
         },
@@ -287,6 +301,7 @@
             this.BathHudimOff = Parameters[index].Value;
         }
       },
+      // Подготовка набора параметров
       SerialParameters: function ()
       {
         return [
@@ -303,21 +318,28 @@
            {"Name":"BathHudimOff",       "Value": this.BathHudimOff},
                ];
       },
-        // Чтение параметров
-        LoadParameters: function(ParamSetId) {
-            this.ParamSetId = ParamSetId;
-            axios.get('FanControl/Parameters/' + this.ParamSetId)
-            .then(function(response){FanControlApp.ParameterEditorObject.ParseParameters(response.data);})
-            .catch(function (error) {alert(error);});
-        },
+      // Чтение параметров
+      LoadParameters: function(ParamSetId) {
+          this.ParamSetId = ParamSetId;
+          axios.get('FanControl/Parameters/' + this.ParamSetId)
+          .then(function(response){FanControlApp.ParameterEditorObject.ParseParameters(response.data);})
+          .catch(function (error) {alert(error);});
+      },
+      // Сохранение параметров
       SaveParameters: function() {
           axios.put('FanControl/Parameters/' + this.ParamSetId + '/', this.SerialParameters())
           .catch(function (error) {alert(error);});
+          this.ParamSetId = "Current";
+          this.ShowParamSetListObject = false;
       },
+      // Создание нового набора параметров
       BackupParameters: function() {
           axios.post('FanControl/Parameters/', this.SerialParameters())
           .catch(function (error) {alert(error);});
+          this.ParamSetId = "Current";
+          this.ShowParamSetListObject = false;
       },
+      // Открытие/закрытие списка наборов параметров
       RestoreParameters: function() {
           this.ShowParamSetListObject = !this.ShowParamSetListObject;
           this.ParamSetListObject.LoadList();
@@ -336,6 +358,7 @@
       el: '#FanControlApp',
       data: {
         ParameterEditorObject: null,
+        bShowParameters: true
       },
 //      methods: {
 //      },

@@ -13,6 +13,7 @@ class FanControl:
 		self.strRootPath = strRootPath
 		self.strDataBase = strRootPath + "/Data/FanControl.db"
 
+	# Подключение обработчиков запросов
 	def Route(self, flaskApplication):
 		flaskApplication.add_url_rule(self.strRootURL, 'FanControl', self.GetARMPage)
 		flaskApplication.add_url_rule(self.strRootURL + "/<FileName>", 'FanControlFiles', self.GetStaticFile,    methods=['GET'])
@@ -28,6 +29,8 @@ class FanControl:
 		flaskApplication.add_url_rule(self.strRootURL + '/Probes/', 'fcProbe_Add',     self.Probe_Add,     methods=['POST'])
 		flaskApplication.add_url_rule(self.strRootURL + '/Probes/<strCode>/<timeEnd>/', 'fcProbes_Delete', self.Probes_Delete, methods=['DELETE'])
 
+	# --- Функции получения статических страниц
+
 	def GetARMPage(self):
 		return self.GetStaticFile("ARM.htm")
 
@@ -35,11 +38,11 @@ class FanControl:
 		f = open(self.strRootPath + "/Static/" + FileName , 'r')
 		return f.read()
 
+	# --- Функции обработки запросов к API
+
 	def ParameterSetList_Get(self):
 		# Читаем список из базы
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		SQLiteConnect.row_factory = sqlite3.Row
-		cursFanControl = SQLiteConnect.cursor()
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect(True)
 		cursFanControl.execute('select Time, Comment from  Params order by Time desc')
 		# Формируем json
 		listResult = []
@@ -51,20 +54,15 @@ class FanControl:
 	def ParameterSet_Add(self):
 		# Готовим значения для записи
 		Parameters = request.get_data(as_text = True)
-		Now = datetime.datetime.today().strftime("%Y%m%d-%H%M%S")
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
+		Now = FanControl._GetNow()
         # Сохраниям
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		cursFanControl.execute('insert into Params (Time, Parameters, Comment) values (?, ?, "")', (Now, Parameters))
 		SQLiteConnect.commit()
 		return "OK"
 
 	def ParameterSet_Get(self, strUpdateTime):
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		SQLiteConnect.row_factory = sqlite3.Row
-		cursFanControl = SQLiteConnect.cursor()
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect(True)
 		# Читаем параметры
 		if strUpdateTime == FanControl.strCurrentTimeName:
 			cursFanControl.execute('select Parameters from  Params order by Time desc limit 1')
@@ -79,11 +77,9 @@ class FanControl:
 	def ParameterSet_Update(self, strUpdateTime):
 		# Готовим значения для записи
 		Parameters = request.get_data(as_text = True)
-		Now = datetime.datetime.today().strftime("%Y%m%d-%H%M%S")
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
+		Now = FanControl._GetNow()
         # Сохраниям
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		if strUpdateTime == FanControl.strCurrentTimeName:
 			cursFanControl.execute('update Params set Time=?, Parameters = ? where Time in (select max(Time) from Params)', (Now, Parameters))
 			if cursFanControl.rowcount < 1:
@@ -94,20 +90,15 @@ class FanControl:
 		return "OK"
 
 	def ParameterSet_Delete(self, strDeleteTime):
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
 		# Удаляем
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		cursFanControl.execute('delete from Params where Time = ?', (strDeleteTime, ))
 		SQLiteConnect.commit()
 		return "OK"
 
 	def ParameterSetComment_Get(self, strUpdateTime):
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		SQLiteConnect.row_factory = sqlite3.Row
-		cursFanControl = SQLiteConnect.cursor()
 		# Читаем параметры
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect(True)
 		if strUpdateTime == FanControl.strCurrentTimeName:
 			cursFanControl.execute('select Comment from  Params order by Time desc limit 1')
 		else:
@@ -123,10 +114,8 @@ class FanControl:
 	def ParameterSetComment_Set(self, strUpdateTime):
 		# Готовим комментарий для записи
 		Parameters = request.json["Comment"]
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
         # Сохраниям
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		if strUpdateTime == FanControl.strCurrentTimeName:
 			cursFanControl.execute('update Params set Comment = ? where Time in (select max(Time) from Params)', (Parameters, ))
 		else:
@@ -135,11 +124,8 @@ class FanControl:
 		return "OK"
 
 	def Probes_Get(self, strCode, timeBegin, timeEnd):
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		SQLiteConnect.row_factory = sqlite3.Row
-		cursFanControl = SQLiteConnect.cursor()
 		# Читаем список из базы
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect(True)
 		cursFanControl.execute('select Time, Code, Value from  ProbeValues where Time >= ? and Time <= ? and Code like ? order by Time desc', (timeBegin, timeEnd, strCode))
 		# Формируем json
 		listResult = []
@@ -153,20 +139,33 @@ class FanControl:
 		strCode   = request.json["Code"]
 		strValue  = request.json["Value"]
 
-		Now = datetime.datetime.today().strftime("%Y%m%d-%H%M%S")
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
+		Now = FanControl._GetNow()
+
         # Сохраниям
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		cursFanControl.execute('insert into ProbeValues (Code, Time, Value) values (?, ?, ?)', (strCode, Now, strValue))
 		SQLiteConnect.commit()
 		return "OK"
 
 	def Probes_Delete(self, strCode, timeEnd):
-		# Открываем базу
-		SQLiteConnect = sqlite3.connect(self.strDataBase)
-		cursFanControl = SQLiteConnect.cursor()
         # Удаляем
+		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
 		cursFanControl.execute('delete from ProbeValues where Time <= ? and Code like ?', (timeEnd, strCode))
 		SQLiteConnect.commit()
 		return "OK"
+
+	# --- Служебные функции
+
+	# Подключение к БД
+	def _DataBaseConnect(self, bUseRow=False):
+		SQLiteConnect = sqlite3.connect(self.strDataBase)
+		if bUseRow:
+			SQLiteConnect.row_factory = sqlite3.Row
+		cursFanControl = SQLiteConnect.cursor()
+		return (SQLiteConnect, cursFanControl)
+
+	def _FormatDate(dtDate):
+		return dtDate.strftime("%Y%m%d-%H%M%S")
+
+	def _GetNow():
+		return FanControl._FormatDate(datetime.datetime.today())
