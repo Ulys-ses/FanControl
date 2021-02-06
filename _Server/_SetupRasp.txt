@@ -16,3 +16,6 @@ timedatectl set-timezone Europe/Moscow
 
 sudo apt-get install supervisor
 sudo mv /home/ubuntu/FanControl.conf  /etc/supervisor/conf.d/
+pip3 install gunicorn
+
+sudo apt install nginx

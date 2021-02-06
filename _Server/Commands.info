@@ -1,0 +1,13 @@
+gunicorn --bind 0.0.0.0:8080 ServerApp:flaskApplication
+python3 ServerApp.py
+
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start FanControl
+sudo supervisorctl stop FanControl
+
+which gunicorn
+
+sudo service nginx start
+sudo service nginx stop
+sudo service nginx restart

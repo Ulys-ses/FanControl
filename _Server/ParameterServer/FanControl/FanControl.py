@@ -126,7 +126,7 @@ class FanControl:
 	def Probes_Get(self, strCode, timeBegin, timeEnd):
 		# Читаем список из базы
 		(SQLiteConnect, cursFanControl) = self._DataBaseConnect(True)
-		cursFanControl.execute('select Time, Code, Value from  ProbeValues where Time >= ? and Time <= ? and Code like ? order by Time desc', (timeBegin, timeEnd, strCode))
+		cursFanControl.execute('select Time, Code, Value from  ProbeValues where Time >= ? and Time <= ? and Code like ? order by Time desc', (timeBegin, timeEnd, strCode.replace('*', '%')))
 		# Формируем json
 		listResult = []
 		for rowProbeInfo in cursFanControl:
@@ -150,7 +150,7 @@ class FanControl:
 	def Probes_Delete(self, strCode, timeEnd):
         # Удаляем
 		(SQLiteConnect, cursFanControl) = self._DataBaseConnect()
-		cursFanControl.execute('delete from ProbeValues where Time <= ? and Code like ?', (timeEnd, strCode))
+		cursFanControl.execute('delete from ProbeValues where Time <= ? and Code like ?', (timeEnd, strCode.replace('*', '%')))
 		SQLiteConnect.commit()
 		return "OK"
 
