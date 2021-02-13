@@ -1,0 +1,13 @@
+Информация о плате (+драйвер):
+https://www.wemos.cc/en/latest/d1/d1_mini.html
+Для менеджера плат:
+https://arduino.esp8266.com/stable/package_esp8266com_index.json
+Motor Shield:
+https://www.wemos.cc/en/latest/d1_mini_shield/motor.html
+
+Библиотеки:
+https://github.com/wemos/LOLIN_I2C_MOTOR_Library - Motor Shield
+https://github.com/adafruit/DHT-sensor-library   - DHT
+https://github.com/adafruit/Adafruit_Sensor      - нужна для DHT
+https://github.com/bblanchon/ArduinoJson         - json (https://arduinojson.org/)
+https://www.arduino.cc/reference/en/libraries/httpclient/ - httpclient
