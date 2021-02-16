@@ -1,0 +1,47 @@
+API сервера (json, flask):
+
+FanControl/
+
+Х	ѕолучить список наборов параметров
+	Parameters/ GET
+		Input -
+		Output [{Date: <DateTime>, Comment:<Comment>},...]
+Х	—оздать набор параметров
+	Parameters/ POST
+		Input  [{Name:"<Name>", Value:"<Value>"},...]
+		Output -
+Х	ѕолучить набор параметров
+	Parameters/<DateTime> GET
+		Input -
+		Output [{Name:"<Name>", Value:"<Value>"},...]
+Х	”становить набор параметров
+	Parameters/<DateTime> PUT
+		Input  [{Name:"<Name>", Value:"<Value>"},...]
+		Output -
+Х	”далить набор параметров
+	Parameters/<DateTime> DELETE
+		Input  -
+		Output -
+Х	ѕолучить комментарий к набору параметров
+	Parameters/<DateTime>/Comment GET
+		Input -
+		Output {Comment:<Comment>}
+Х	”становить комментарий к набору параметров
+	Parameters/<DateTime>/Comment PUT
+		Input  {Comment:<Comment>}
+		Output -
+Х	ѕолучить данные датчиков (период, код датчика).
+	Probes/<Code>/<Begin>/<End>/ GET
+		Input  -
+		Output [{Date: "<Date>", Code: "<ProbeCode>", Value: "<Value>"},...]
+Х	—охранить данные датчика (код датчика, значение)
+	Probes/ POST
+		Input  {Date: "<Date>", Code: "<ProbeCode>", Value: "<Value>"}
+		Output -
+Х	”далить показани€ датчиков (датчика, дата-врем€)
+	Probes/<Code>/<End>/ DELETE
+		Input  -
+		Output -
+
+ од датчика допускает * в качестве шаблона.
+¬ качестве <DateTime> набора параметров можно использовать "Current" - текущий набор параметров.

@@ -1,0 +1,26 @@
+// Константы системы управления вентиляторами
+//----------------------------------------------------
+
+#if !defined (_FC_Const_h_)
+#define _FC_Const_h_
+
+#include <Ethernet.h>
+
+enum EFCErrors
+{
+    c_FCEOK = 0,
+    c_FCEIncorrectParameterJSON = -1
+};
+
+// Параметры подключения к WiFi
+const char* const c_szSSID     = "";
+const char* const c_szPassword = "";
+
+// Сервер параметров
+const IPAddress c_ipHost(10,0,0,6);
+const uint16_t c_nPort = 8080;
+
+const char* const c_szURLParamGet = "/FanControl/Parameters/Current/";
+const char* const c_szURLProbePost = "/FanControl/Probes/";
+
+#endif // _FC_Const_h_
