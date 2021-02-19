@@ -6,9 +6,14 @@
 #include "FCConst.h"
 
 #include "FCProbeHudimity.h"
+#include "FCProbeAnalog.h"
+#include "FCProbeLightTime.h"
 #include "FCProbeMotor.h"
 
-CFCProbeHudimity g_FCProbeHudimity("BH", c_nDHTType, c_nDHTPin);
+CFCProbeHudimity   g_ProbeHudimity("BH", c_nDHTType, c_nDHTPin);
+CFCProbeAnalog     g_ProbeNoice("RN", c_nNoicePin);
+CFCProbeLightTime  g_ProbeLight("RL", c_nLightPin);
+
 CFCProbeMotor g_motorBathroom("BL", c_FCMCBathroom, c_FCPCBathLowLevel);
 CFCProbeMotor g_motorRestroom("RL", c_FCMCRestroom, c_FCPCRestLowLevel);
 
@@ -38,7 +43,7 @@ void loop()
 //    else
 //        Serial.print(".");
 
-    int nHudimity = g_FCProbeHudimity.GetValue();
+    int nHudimity = g_ProbeHudimity.GetValue();
 //    Serial.print("Hudimity:");
 //    Serial.println(nHudimity);
     delay(5000);
