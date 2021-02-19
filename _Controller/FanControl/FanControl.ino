@@ -1,61 +1,45 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
-#include <HttpClient.h>
 
 #include "FCParameters.h"
+#include "FCParamServer.h"
 #include "FCConst.h"
 
-CFCParameters g_FCParameters;
+#include "FCProbeHudimity.h"
+#include "FCProbeMotor.h"
 
-WiFiClient g_WiFiClient;
-HttpClient g_HttpClient(g_WiFiClient);
+CFCProbeHudimity g_FCProbeHudimity("BH", c_nDHTType, c_nDHTPin);
+CFCProbeMotor g_motorBathroom("BL", c_FCMCBathroom, c_FCPCBathLowLevel);
+CFCProbeMotor g_motorRestroom("RL", c_FCMCRestroom, c_FCPCRestLowLevel);
 
 void setup() 
 {
-  Serial.begin(115200);
-  Serial.println("Start!");
-  
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(c_szSSID, c_szPassword);
+    Serial.begin(115200);
+    Serial.println("Start!");
+    
+    g_FCParamServer.Connect(c_szSSID, c_szPassword);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
 }
 
 void loop() 
 {
-    int err = g_HttpClient.get(c_ipHost, "", c_nPort, c_szURLParamGet);
-    Serial.print("g_HttpClient.get");
-    Serial.println(err);
-    err = g_HttpClient.skipResponseHeaders();
-    Serial.print("g_HttpClient.skipResponseHeaders");
-    Serial.println(err);
-    int bodyLen = g_HttpClient.contentLength();
-    Serial.print("g_HttpClient.contentLength");
-    Serial.println(err);
-      String Data;
-      while(g_HttpClient.available())
-      {
-            String line = g_HttpClient.readStringUntil('\r');
-                Data = Data + line;
-      }
-    g_HttpClient.stop();  
-    Serial.println(Data);
+    if (g_FCParameters.NeedUpdate())
+    {
+        String strParams = g_FCParamServer.GetParameters(c_szHost, c_nPort, c_szURLParamGet);
+//        Serial.println(strParams);
 
-            g_FCParameters.Load(Data);
-Serial.println("Loaded params:==============================");
-        for (int i = 0; i < c_FCPCParametersQuant; ++i)
-{
-  Serial.print(g_FCParameters.GetParameterName(EFCParameterCodes(i)));
-  Serial.print(": ");
-  Serial.println(g_FCParameters.GetParameterValue(EFCParameterCodes(i)));
-}
-        delay(3000); // execute once every 5 minutes, don't flood remote service
+        g_FCParameters.Load(strParams);
+//        g_FCParameters.Print("Loaded params:==============================");
+    }
+//    else
+//        Serial.print(".");
+
+    int nHudimity = g_FCProbeHudimity.GetValue();
+//    Serial.print("Hudimity:");
+//    Serial.println(nHudimity);
+    delay(5000);
 }

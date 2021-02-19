@@ -6,20 +6,26 @@
 
 #include "FCProbeBase.h"
 
+#include <DHT.h> 
+
 class CFCProbeHudimity
     : public CFCProbeBase
 {
+    DHT m_dht;
 protected:
     // Загрузка показаний датчика.
     virtual int LoadValue(void)
     {
-        return m_nValue;
+        return m_dht.readHumidity();
     }
 
 public:
-    CFCProbeHudimity(const char *szProbeCode, HttpClient &Client)
-        : CFCProbeBase(szProbeCode, Client)
-    {}
+    CFCProbeHudimity(const char *szProbeCode, int nDHTType, int nDHTPin)
+        : CFCProbeBase(szProbeCode)
+        , m_dht(nDHTPin, nDHTType)
+    {
+        m_dht.begin();
+    }
 };
 
 #endif // _FC_ProbeHudimity_h_

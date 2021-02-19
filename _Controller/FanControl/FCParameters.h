@@ -16,10 +16,10 @@ enum EFCParameterCodes
     c_FCPCRestTimeWorkHard,   // - время проветривания туалета
     c_FCPCRestTimeShine,      // - время горения лампы для включения проветривания
     c_FCPCRestShineLevel,     // - уровень освещенности в туалете
-    c_FCPCRestLowFreq,        // - частота постоянного режима в туалете
-    c_FCPCRestHighFreq,       // - частота интенсивного режима в туалете
-    c_FCPCBathLowFreq,        // - частота постоянного режима в ванной
-    c_FCPCBathHighFreq,       // - частота интенсивного режима в ванной
+    c_FCPCRestLowLevel,       // - уровень постоянного режима в туалете
+    c_FCPCRestHighLevel,      // - уровень интенсивного режима в туалете
+    c_FCPCBathLowLevel,       // - уровень постоянного режима в ванной
+    c_FCPCBathHighLevel,      // - уровень интенсивного режима в ванной
     c_FCPCBathHudimOn,        // - пороговое значение влажности для включения проветривания в ванной
     c_FCPCBathHudimOff,       // - пороговое значение влажности для вЫключения проветривания в ванной
 
@@ -41,7 +41,7 @@ public:
     int Load(const String &strJSON);
 
     // Получение значений параметров
-    int GetParameterValue(EFCParameterCodes nParamCode)
+    int GetParameterValue(int nParamCode)
     {
         return m_Parameters[nParamCode];
     }
@@ -54,6 +54,20 @@ public:
     {
         return  (m_lLastUpdate + m_Parameters[c_FCPCTimeGetParams] * 1000 <= millis());
     }
+
+    // Печать параметров
+    void Print(const char *szTitle)
+    {
+        Serial.println(szTitle);
+        for (int i = 0; i < c_FCPCParametersQuant; ++i)
+        {
+            Serial.print(GetParameterName(EFCParameterCodes(i)));
+            Serial.print(": ");
+            Serial.println(GetParameterValue(i));
+        }
+    }
 };
+
+extern CFCParameters  g_FCParameters;
 
 #endif // _FC_parametes_h_
