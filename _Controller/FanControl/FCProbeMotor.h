@@ -18,6 +18,8 @@ class CFCProbeMotor
     EFCMotorCodes m_nMotorCode;
     // Номер базового уровня мотора
     int m_nBaseLevelCode;
+    // Время окончания работы по таймеру
+    int m_nFinishWork;
 
 protected:
 
@@ -25,7 +27,9 @@ public:
     CFCProbeMotor(const char *szProbeCode, EFCMotorCodes nMotorCode, int nBaseLevelCode);
 
     // Установка нового уровня
-    void SetLevel(int nLevel);
+    void SetLevel(int nLevel, int nTimeout = c_nMotorTimeInf);
+    // Проверка таймера
+    void CheckTimer(int nLevel);
 };
 
 #endif // _FC_ProbeMotor_h_

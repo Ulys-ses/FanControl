@@ -15,7 +15,7 @@ enum EFCParameterCodes
     c_FCPCTimeSaveProbValues, // - промежуток времени между сохранениями показаний датчиков
     c_FCPCRestTimeWorkHard,   // - время проветривания туалета
     c_FCPCRestTimeShine,      // - время горения лампы для включения проветривания
-    c_FCPCRestShineLevel,     // - уровень освещенности в туалете
+    c_FCPCRestNoiceLevel,     // - уровень громкости спуска воды
     c_FCPCRestLowLevel,       // - уровень постоянного режима в туалете
     c_FCPCRestHighLevel,      // - уровень интенсивного режима в туалете
     c_FCPCBathLowLevel,       // - уровень постоянного режима в ванной

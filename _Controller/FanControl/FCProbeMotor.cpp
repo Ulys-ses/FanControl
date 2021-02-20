@@ -12,6 +12,7 @@ CFCProbeMotor::CFCProbeMotor(const char *szProbeCode, EFCMotorCodes nMotorCode, 
     : CFCProbeBase(szProbeCode)
     , m_nMotorCode(nMotorCode)
     , m_nBaseLevelCode(nBaseLevelCode)
+    , m_nFinishWork(c_nMotorTimeInf)
 {
     // wait motor shield ready.
     while (m_Motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
@@ -25,7 +26,7 @@ CFCProbeMotor::CFCProbeMotor(const char *szProbeCode, EFCMotorCodes nMotorCode, 
 }
 
 // Установка нового уровня
-void CFCProbeMotor::SetLevel(int nLevel)
+void CFCProbeMotor::SetLevel(int nLevel, int nTimeout)
 {
     if (m_nValue != nLevel)
     {
@@ -33,6 +34,23 @@ void CFCProbeMotor::SetLevel(int nLevel)
         
         m_nValue = nLevel;
     }
+
+    // Если таймер задан - пересчитаем его во время финиша
+    if (c_nMotorTimeInf != nTimeout)
+        nTimeout = millis() + nTimeout * 1000;
+    
+    // Фиксируем время финиша
+    m_nFinishWork = nTimeout;
+
+    // Отправляем на сервер
+    SendToServer();
+}
+
+void CFCProbeMotor::CheckTimer(int nLevel)
+{
+    if (c_nMotorTimeInf != m_nFinishWork)    // Если таймер установлен
+        if (millis() > m_nFinishWork)        // Если время пришло
+            SetLevel(nLevel);                // Включаем  бессрочно
 
     // Отправляем на сервер
     SendToServer();
