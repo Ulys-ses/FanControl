@@ -14,15 +14,16 @@ CFCProbeMotor::CFCProbeMotor(const char *szProbeCode, EFCMotorCodes nMotorCode, 
     , m_nBaseLevelCode(nBaseLevelCode)
     , m_nFinishWork(c_nMotorTimeInf)
 {
+}
+
+void CFCProbeMotor::sInitMotor(void)
+{
     // wait motor shield ready.
     while (m_Motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
         m_Motor.getInfo();
 
     //Change A & B 's Frequency to 1000Hz.
     m_Motor.changeFreq(MOTOR_CH_BOTH, c_nMotorFrequency);
-
-    // Ставим минимальный уровень
-    SetLevel(c_FCMLBaseLevel);
 }
 
 // Установка нового уровня

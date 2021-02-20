@@ -26,6 +26,9 @@ protected:
 public:
     CFCProbeMotor(const char *szProbeCode, EFCMotorCodes nMotorCode, int nBaseLevelCode);
 
+    // Инициализация платы
+    static void sInitMotor(void);
+
     // Установка нового уровня
     void SetLevel(int nLevel, int nTimeout = c_nMotorTimeInf);
     // Проверка таймера

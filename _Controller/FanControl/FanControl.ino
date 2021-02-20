@@ -28,6 +28,12 @@ void setup()
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+
+    // Инициализируем плату моторов
+    CFCProbeMotor::sInitMotor();
+    // Запускаем моторы в минимальном режиме
+    g_motorBathroom.SetLevel(c_FCMLBaseLevel);
+    g_motorRestroom.SetLevel(c_FCMLBaseLevel);
 }
 
 void loop() 
@@ -43,10 +49,10 @@ void loop()
 //    else
 //        Serial.print(".");
 
+
     int nHudimity = g_ProbeHudimity.GetValue();
 //    Serial.print("Hudimity:");
 //    Serial.println(nHudimity);
-
     // Вентилятор в ванной
     if (nHudimity > g_FCParameters.GetParameterValue(c_FCPCBathHudimOn))
         g_motorBathroom.SetLevel(c_FCMLIntensiveLevel);
