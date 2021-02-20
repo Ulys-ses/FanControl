@@ -225,7 +225,7 @@
     <h3>Туалет</h3>
     Время проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeWorkHard"> <br/>
     Время горения лампы для включения проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeShine"> <br/>
-    Уровень освещенности в туалете: <br/>&nbsp;&nbsp;<input v-model.number="RestShineLevel"> <br/>
+    Уровень громкости спуска воды: <br/>&nbsp;&nbsp;<input v-model.number="RestNoiceLevel"> <br/>
     Частота вращения вентилятора:<br/>
     &nbsp;&nbsp;постоянная: <input v-model.number="RestLowFreq"> &nbsp;&nbsp;интенсивная: <input v-model.number="RestHighFreq"><br/>
     <br/>
@@ -255,7 +255,7 @@
           TimeSaveProbValues: 60, // - промежуток времени между сохранениями показаний датчиков
           RestTimeWorkHard: 300,  // - время проветривания туалета
           RestTimeShine: 300,     // - время горения лампы для включения проветривания
-          RestShineLevel: 10,     // - уровень освещенности в туалете
+          RestNoiceLevel: 10,     // - уровень громкости спуска воды
           RestLowFreq: 20,        // - частота постоянного режима в туалете
           RestHighFreq: 100,      // - частота интенсивного режима в туалете
           BathLowFreq: 20,        // - частота постоянного режима в ванной
@@ -285,8 +285,8 @@
             this.RestTimeWorkHard = Parameters[index].Value;
           else if (Parameters[index].Name == "RestTimeShine")
             this.RestTimeShine = Parameters[index].Value;
-          else if (Parameters[index].Name == "RestShineLevel")
-            this.RestShineLevel = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestNoiceLevel")
+            this.RestNoiceLevel = Parameters[index].Value;
           else if (Parameters[index].Name == "RestLowFreq")
             this.RestLowFreq = Parameters[index].Value;
           else if (Parameters[index].Name == "RestHighFreq")
@@ -309,7 +309,7 @@
            {"Name":"TimeSaveProbValues", "Value": this.TimeSaveProbValues},
            {"Name":"RestTimeWorkHard",   "Value": this.RestTimeWorkHard},
            {"Name":"RestTimeShine",      "Value": this.RestTimeShine},
-           {"Name":"RestShineLevel",     "Value": this.RestShineLevel},
+           {"Name":"RestNoiceLevel",     "Value": this.RestNoiceLevel},
            {"Name":"RestLowFreq",        "Value": this.RestLowFreq},
            {"Name":"RestHighFreq",       "Value": this.RestHighFreq},
            {"Name":"BathLowFreq",        "Value": this.BathLowFreq},
