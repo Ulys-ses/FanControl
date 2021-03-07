@@ -39,6 +39,7 @@ enum EFCMotorCodes
 // Коды режимов моторов, они же сдвиги в списке параметров
 enum EFCMotorLevels
 {
+    c_FCMLAutoMode = -1,              // Автоматический режим (для параметров)
     c_FCMLBaseLevel = 0,              // Постоянный режим
     c_FCMLIntensiveLevel = 1          // Интенсивный режим
 };

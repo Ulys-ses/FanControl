@@ -19,11 +19,13 @@ const String g_strParamNames[] =
     "BathLowFreq",        // - частота постоянного режима в ванной
     "BathHighFreq",       // - частота интенсивного режима в ванной
     "BathHudimOn",        // - пороговое значение влажности для включения проветривания в ванной
-    "BathHudimOff"        // - пороговое значение влажности для вЫключения проветривания в ванной
+    "BathHudimOff",       // - пороговое значение влажности для вЫключения проветривания в ванной
+    "RestMode",           // - режим вентияллятора в туалете (-1) - автомат, см. EFCMotorLevels 
+    "BathMode"            // - режим вентияллятора в ванной (-1) - автомат, см. EFCMotorLevels  
 };
 
 CFCParameters::CFCParameters(void)
-    : m_Parameters {5,60,300,300,10,20,100,20,100,60,40}
+    : m_Parameters {5,60,300,300,10,20,100,20,100,60,40,c_FCMLAutoMode,c_FCMLAutoMode}
     , m_lLastUpdate (0)       
 {}
 

@@ -22,6 +22,8 @@ enum EFCParameterCodes
     c_FCPCBathHighLevel,      // - уровень интенсивного режима в ванной
     c_FCPCBathHudimOn,        // - пороговое значение влажности для включения проветривания в ванной
     c_FCPCBathHudimOff,       // - пороговое значение влажности для вЫключения проветривания в ванной
+    c_FCPCRestMode,           // - режим вентияллятора в туалете (-1) - автомат, см. EFCMotorLevels 
+    c_FCPCBathMode,           // - режим вентияллятора в ванной (-1) - автомат, см. EFCMotorLevels 
 
     c_FCPCParametersQuant     // - Максимальный номер для определения количества параметров
 };

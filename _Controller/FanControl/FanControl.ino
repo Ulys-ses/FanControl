@@ -54,19 +54,29 @@ void loop()
 //    Serial.print("Hudimity:");
 //    Serial.println(nHudimity);
     // Вентилятор в ванной
-    if (nHudimity > g_FCParameters.GetParameterValue(c_FCPCBathHudimOn))
-        g_motorBathroom.SetLevel(c_FCMLIntensiveLevel);
-    else if (nHudimity < g_FCParameters.GetParameterValue(c_FCPCBathHudimOff))
-        g_motorBathroom.SetLevel(c_FCMLBaseLevel);
+    if (g_FCParameters.GetParameterValue(c_FCPCBathMode) == c_FCMLAutoMode)
+    {
+        if (nHudimity > g_FCParameters.GetParameterValue(c_FCPCBathHudimOn))
+            g_motorBathroom.SetLevel(c_FCMLIntensiveLevel);
+        else if (nHudimity < g_FCParameters.GetParameterValue(c_FCPCBathHudimOff))
+            g_motorBathroom.SetLevel(c_FCMLBaseLevel);
+    }
+    else
+        g_motorBathroom.SetLevel(g_FCParameters.GetParameterValue(c_FCPCBathMode));
 
     // Вентилятор в туалете
     int nNoiceTimeout = g_ProbeNoice.GetValue();      // Обязательно получаем, чтобы фиксировать звук!
     int nLightTimeout = g_ProbeLight.GetValue();
-    if (nLightTimeout > g_FCParameters.GetParameterValue(c_FCPCRestTimeShine) 
-                && nNoiceTimeout < nLightTimeout)
-        g_motorRestroom.SetLevel(c_FCMLIntensiveLevel, g_FCParameters.GetParameterValue(c_FCPCRestTimeWorkHard));
+    if (g_FCParameters.GetParameterValue(c_FCPCRestMode) == c_FCMLAutoMode)
+    {
+        if (nLightTimeout > g_FCParameters.GetParameterValue(c_FCPCRestTimeShine) 
+                    && nNoiceTimeout < nLightTimeout)
+            g_motorRestroom.SetLevel(c_FCMLIntensiveLevel, g_FCParameters.GetParameterValue(c_FCPCRestTimeWorkHard));
+        else
+            g_motorRestroom.CheckTimer(c_FCMLBaseLevel);
+    }
     else
-        g_motorRestroom.CheckTimer(c_FCMLBaseLevel);
+        g_motorBathroom.SetLevel(g_FCParameters.GetParameterValue(c_FCPCRestMode));
 
     delay(50);
 }

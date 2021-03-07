@@ -223,16 +223,28 @@
     <br/>
 
     <h3>Туалет</h3>
+    Режим: 
+    <input type="radio" id="auto" value="-1" v-model="RestMode"/><label for="auto">Автомат</label>
+    <input type="radio" id="low" value="0" v-model="RestMode"/><label for="low">Постоянный</label>
+    <input type="radio" id="high" value="1" v-model="RestMode"/><label for="high">Интенсивный</label><br/>
+    <span v-if="RestMode == -1">
     Время проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeWorkHard"> <br/>
     Время горения лампы для включения проветривания (сек): <br/>&nbsp;&nbsp;<input v-model.number="RestTimeShine"> <br/>
     Уровень громкости спуска воды: <br/>&nbsp;&nbsp;<input v-model.number="RestNoiceLevel"> <br/>
+    </span>
     Частота вращения вентилятора:<br/>
     &nbsp;&nbsp;постоянная: <input v-model.number="RestLowFreq"> &nbsp;&nbsp;интенсивная: <input v-model.number="RestHighFreq"><br/>
     <br/>
 
     <h3>Ванная</h3>
+    Режим: 
+    <input type="radio" id="auto" value="-1" v-model="BathMode"/><label for="auto">Автомат</label>
+    <input type="radio" id="low" value="0" v-model="BathMode"/><label for="low">Постоянный</label>
+    <input type="radio" id="high" value="1" v-model="BathMode"/><label for="high">Интенсивный</label><br/>
+    <span v-if="BathMode == -1">
     Пороговое значение влажности для включения/выключения вентилятора:<br/>
     &nbsp;&nbsp;выключение: <input v-model.number="BathHudimOff"> &nbsp;&nbsp;включение: <input v-model.number="BathHudimOn"><br/>
+    </span>
     Частота вращения вентилятора:<br/>
     &nbsp;&nbsp;постоянная: <input v-model.number="BathLowFreq"> &nbsp;&nbsp;интенсивная: <input v-model.number="BathHighFreq"><br/>
     <br/>
@@ -262,6 +274,8 @@
           BathHighFreq: 100,      // - частота интенсивного режима в ванной
           BathHudimOn: 60,        // - пороговое значение влажности для включения проветривания в ванной
           BathHudimOff: 40,       // - пороговое значение влажности для вЫключения проветривания в ванной
+          RestMode: -1,           // - режим вентияллятора в туалете (-1) - автомат, см. EFCMotorLevels 
+          BathMode: -1,           // - режим вентияллятора в ванной (-1) - автомат, см. EFCMotorLevels 
 
           ParamSetListObject: null,
           ShowParamSetListObject: false,
@@ -299,6 +313,10 @@
             this.BathHudimOn = Parameters[index].Value;
           else if (Parameters[index].Name == "BathHudimOff")
             this.BathHudimOff = Parameters[index].Value;
+          else if (Parameters[index].Name == "RestMode")
+            this.RestMode = Parameters[index].Value;
+          else if (Parameters[index].Name == "BathMode")
+            this.BathMode = Parameters[index].Value;
         }
       },
       // Подготовка набора параметров
@@ -316,6 +334,8 @@
            {"Name":"BathHighFreq",       "Value": this.BathHighFreq},
            {"Name":"BathHudimOn",        "Value": this.BathHudimOn},
            {"Name":"BathHudimOff",       "Value": this.BathHudimOff},
+           {"Name":"RestMode",       "Value": this.RestMode},
+           {"Name":"BathMode",       "Value": this.BathMode},
                ];
       },
       // Чтение параметров
